@@ -1,0 +1,10 @@
+1, Jack Carter, Thunder Racing
+3, Ella Thompson, Apex Racing
+7, Lucas Vega, Vortex Racing
+12, Mia Matthews, Titan Autosport
+15, Noah Johnson, Thunder Racing
+19, Oliver King, Titan Autosport
+21, Emma Rodriguez, Stratos Racing
+25, Leo Black, Stratos Racing
+33, Zoe Carter, Apex Racing
+42, Ben Harrison, Vortex Racing

@@ -105,6 +105,13 @@ class Races:#(s)
                 "driver_team": driver_team
                 }
         return drivers
+    # helper function for suffix
+    def suffix_help(self, n):
+        if n > 3 and n < 21:
+            return 'th'
+        else:
+            suffixes = {1: 'st', 2: 'nd', 3: 'rd'}
+            return suffixes.get(n % 10, 'th')
 
     def read_results(self):#(s)
         """
@@ -171,12 +178,6 @@ class Races:#(s)
             items.sort(key=sort_key)
             # points award
             points_table = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
-            def suffix_help(n):
-                if n > 3 and n < 21:
-                    return 'th'
-                else:
-                    suffixes = {1: 'st', 2: 'nd', 3: 'rd'}
-                    return suffixes.get(n % 10, 'th')
             # output the result
             parts = []
             position = 1
@@ -187,7 +188,7 @@ class Races:#(s)
                     points = points_table[position - 1]
                 else:
                     points = 0
-                pos_suffix = suffix_help(position)
+                pos_suffix = self.suffix_help(position)
                 parts.append(f"{position}{pos_suffix} {driver_name} {points}pts")
                 position += 1
             return f"Results from Race {race_id}: " + ", ".join(parts)
@@ -256,10 +257,32 @@ class Races:#(s)
                 float: The average lap times for the specified driver
                 str: The relevant message if average lap time not appropriate
         """
+        # given the driver number and race number - output the average lap time
+        # means we only need the results info for this task
+        results = self.partition_results(results_string)
+        # if race number =0, then calculate the averge time across all races
+        all_laps = []
+        if race_number == 0:
+            for r_id in results:
+                race_entries = results[r_id]
+                if driver_number in race_entries:
+                    laps = race_entries[driver_number]["laps"]
+                    for v in laps:
+                        all_laps.append(v)
+        else:
+            if race_number in results and driver_number in results[race_number]:
+                laps = results[race_number][driver_number]["laps"]
+                for v in laps:
+                    all_laps.append(v)
+        # if no laps recorded
+        if len(all_laps) == 0:
+            return "No Average Lap Time Available"
+        # now calculate the average lap time
+        total_time = sum(all_laps)
+        avg = total_time / len(all_laps)
+        return round(avg, 2) # keep two decimal places
 
-        # Your code here
 
-        pass
 
     def overall_table(self, results_string, drivers_string):#(s)
         """
@@ -274,9 +297,73 @@ class Races:#(s)
             Returns:
                 str: The overall results table.
         """
-        # Your code here
+        # load the race and driver information first
+        results = self.partition_results(results_string)
+        drivers = self.partition_drivers(drivers_string)
+        # get a lssit of all driver ids:
+        driver_ids = list(drivers.keys())
+        # get the max rank in a race
+        max_rank = 1
+        for i in results:
+            if len(results[i]) > max_rank:
+                max_rank = len(results[i])
+        total_points = {}
+        count_position = {} # in case some drivers have the same points
+        for d in driver_ids:
+            total_points[d] = 0
+            count_position[d] = [0] * max_rank  # [0,0,0,0,0, ...] initialize
+        # now calculate the points and position and then put them into total_points and ount_position
+        # points table
+        def points(position):
+            points_table = [25, 18, 15, 12, 10, 8, 6, 4, 2, 1]
+            if position <= len(points_table):
+                return points_table[position - 1]
+            else:
+                return 0
+        # rank a single race
+        def rank_key(driver_id, results_key):
+            driver_name = drivers[driver_id]["driver_name"]
+            status = results_key["status"]
+            if status == "finished":
+                return (0, results_key["total_time"], driver_name)  # finished drivers first and sorted by total time
+            if results_key["fail_lap"] == 1:
+                return (1, -results_key["fail_lap"], 0.0, driver_name)
+            # else
+            return (1, -results_key["fail_lap"], results_key["total_time"], driver_name)
+        # now loop races
+        for i in results:
+            race_entries = results[i]
+            ranked_ids = list(race_entries.keys())
+            ranked_ids.sort(key=lambda driver_id: rank_key(driver_id, race_entries[driver_id]))
+            # now assign points and position count
+            position = 1
+            for driver_id in ranked_ids:
+                total_points[driver_id] += points(position)
+                count_position[driver_id][position - 1] += 1
+                position += 1
+        # now we have total points and count position, we can rank the overall table
+        def overall_sort_key(driver_id):
+            driver_name = drivers[driver_id]["driver_name"] 
+            k = [-total_points[driver_id]]
+            for c in count_position[driver_id]:
+                k.append(-c)
+            k.append(driver_name)
+            return tuple(k)
+            
+        driver_ids.sort(key=overall_sort_key)
+        # output
+        parts = []
+        position = 1
+        for driver_id in driver_ids:
+            driver_name = drivers[driver_id]["driver_name"]
+            driver_team = drivers[driver_id]["driver_team"]
+            points_scored = total_points[driver_id]
+            pos_suffix = self.suffix_help(position)
+            parts.append(f"{position}{pos_suffix} {driver_name} {points_scored}pts")
+            position += 1
+        return "Overall Results: " + ", ".join(parts)
 
-        pass
+
 
 if __name__ == '__main__':
     import os
@@ -292,8 +379,14 @@ if __name__ == '__main__':
     task_2 = my_instance.read_drivers()
     # print(task_2)
 
-    task_3 = my_instance.individual_race_result(task_1, task_2, 1)
+    task_3 = my_instance.individual_race_result(task_1, task_2, 2)
     # print(task_3) 
 
-    task_4 = my_instance.driver_in_race_result(task_1, task_2, 1, 200)
-    print(task_4)
+    task_4 = my_instance.driver_in_race_result(task_1, task_2, 2, 15)
+    # print(task_4)
+
+    task_5 = my_instance.average_lap_times(task_1, task_2, 1, 15)
+    # print(task_5)
+
+    task_6 = my_instance.overall_table(task_1, task_2)
+    # print(task_6)

@@ -28,7 +28,7 @@ class MainWindow:
 
         file_menu = tk.Menu(self.menubar, tearoff=False)
         file_menu.add_command(label='Save', command=self.save_menu_clicked)
-        file_menu.add_command(label='Save', command=self.save_as_menu_clicked)
+        file_menu.add_command(label='Save as', command=self.save_as_menu_clicked)
         file_menu.add_command(label='Load', command=self.load_menu_clicked)
         file_menu.add_command(label='Exit', command=self.root.destroy)
 

@@ -184,7 +184,10 @@ class MainWindow:
         return selected_animals
 
     def adopt_animal_clicked(self):
-        selected = self.get_selected()
+        selected = self.get_selected() # selected = 0 / False, if nothing selected
+        if not selected: # add or , not , 
+            tk.messagebox.showerror('No animals selected', 'Please select at least one animal to adopt.')
+            return
         # show adoption form popup
         adoption_form_window.AdoptionFormWindow(self.root, selected, self.generate_adoption_form_clicked)
 

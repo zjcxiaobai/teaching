@@ -98,12 +98,24 @@ class FilePickerWindow:
 
     def folder_button_clicked(self, location: pathlib.Path):
         self.directory_path = location
-        self.refresh_path_buttons()
+        self.initialise_directory_location()
 
     def initialise_directory_location(self):
         self.refresh_path_buttons()
         self.file_tree.heading('Filename', text=self.directory_path.stem)
-        directory_contents = os.listdir(self.directory_path)
+        # try
+        try:
+            directory_contents = os.listdir(self.directory_path)
+        except PermissionError:
+            tk.messagebox.showerror('Access denied', f'Cannot access the directory: {self.directory_path}')
+            # if permission denied, go back to the previous dir
+            self.directory_path = self.directory_path.parent
+            directory_contents = os.listdir(self.directory_path)
+        except FileNotFoundError:
+            tk.messagebox.showerror('Directory not found', f'Directory not found: {self.directory_path}')
+            # if not found, go back to the previous dir
+            self.directory_path = self.directory_path.parent
+            directory_contents = os.listdir(self.directory_path)
 
         files = []
         folders = []

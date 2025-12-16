@@ -230,6 +230,7 @@ class MainWindow:
         self.refresh_animals_tree()
 
     def filter_button_clicked(self, filter_listbox, dog_var, cat_var, child_var):
+        self.search_item.set('')
         selected_indexes = filter_listbox.curselection()
         selected = []
         for i in selected_indexes:

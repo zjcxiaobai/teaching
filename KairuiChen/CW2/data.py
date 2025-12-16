@@ -29,7 +29,8 @@ class AnimalData:
         return self._displayed_animals
 
     def reset_displayed_animals(self):
-        self._displayed_animals = self.get_animals_list()
+        not_adopted_animales = self._animals[self._animals[_adopted_col] == False]
+        self._displayed_animals = df_to_animal_list(not_adopted_animales)
 
     def apply_filter(self, species: list[str], dog_friendly, cat_friendly, child_friendly):
         # create empty filter

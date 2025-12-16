@@ -67,6 +67,10 @@ class AnimalData:
         self._animals.to_csv(filename, index=False, date_format=_date_format)
 
     def add_animal(self, animal: Animal):
+        #  avoid adding duplicate animals, same name , same date of birth
+        duplicate_filter = (self._animals[_name_col] == animal.name) & (self._animals[_dob_col] == animal.dob)
+        if duplicate_filter.any():
+            raise ValueError(f'Animal with name {animal.name} and date of birth {animal.dob} already exists.')
         new_animal = list_to_df([animal])
         self._animals = pd.concat([self._animals, new_animal], ignore_index=True)
 

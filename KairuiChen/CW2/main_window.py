@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import ttk
 import datetime
 from pathlib import Path
@@ -16,6 +17,7 @@ class MainWindow:
         self.root.title('Animal Rescue')
         self.root.minsize(650, 200)
         self.root.geometry('800x450+50+50')
+
 
         # load animal data early because various components reference it
         self.animal_file = 'animals.csv'
@@ -90,9 +92,16 @@ class MainWindow:
         child_checkbox.pack()
         filter_button.pack()
         reset_button.pack()
+        # change the layout , so that it can not hide the information when resizing
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=3)
+        self.root.grid_columnconfigure(1, weight=1)
 
-        self.animals_tree.grid(column=0, row=0)
-        filter_frame.grid(column=1, row=1)
+        self.animals_tree.grid(column=0, row=0, sticky="nsew")
+        filter_frame.grid(column=1, row=1, sticky="ns")
+
+        # self.animals_tree.grid(column=0, row=0)
+        # filter_frame.grid(column=1, row=1)
 
         self.load_data()
         self.reset_displayed_animals()
@@ -144,6 +153,7 @@ class MainWindow:
 
     def add_animal(self, new_animal: animal.Animal):
         self.animal_data.add_animal(new_animal)
+        self.animal_data.reset_displayed_animals()
         self.refresh_animals_tree()
 
     def save_animal_clicked(self, animal_window: add_animal_window.AddAnimalWindow):
@@ -186,7 +196,7 @@ class MainWindow:
     def adopt_animal_clicked(self):
         selected = self.get_selected() # selected = 0 / False, if nothing selected
         if not selected: # add or , not , 
-            tk.messagebox.showerror('No animals selected', 'Please select at least one animal to adopt.')
+            messagebox.showerror('No animals selected', 'Please select at least one animal to adopt.')
             return
         # show adoption form popup
         adoption_form_window.AdoptionFormWindow(self.root, selected, self.generate_adoption_form_clicked)
@@ -195,7 +205,7 @@ class MainWindow:
         adopted_animals = adoption_form.to_adopt
         # check if any animals selected
         if not adopted_animals:
-            tk.messagebox.showerror('No animals selected', 'Please select at least one animal to adopt.')
+            messagebox.showerror('No animals selected', 'Please select at least one animal to adopt.')
             return
         adopter_name = adoption_form.name_var.get()
         adopter_address = adoption_form.address_box.get('1.0', 'end-1c')
@@ -227,6 +237,7 @@ class MainWindow:
         to_delete = self.get_selected()
         for a in to_delete:
             self.animal_data.delete_animal(a)
+        self.animal_data.reset_displayed_animals()
         self.refresh_animals_tree()
 
     def filter_button_clicked(self, filter_listbox, dog_var, cat_var, child_var):

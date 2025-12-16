@@ -1,0 +1,7 @@
+
+
+
+如果， variables = 0 等同于， False
+如果 variable 不等于 0， 等同于 True
+如果 list 是空的， 等同于 False 否定\
+如果 list 不是空的， 等同于 True

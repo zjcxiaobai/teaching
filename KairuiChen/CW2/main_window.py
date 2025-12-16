@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import datetime
+from pathlib import Path
 
 import animal
 import data
@@ -155,6 +156,10 @@ class MainWindow:
 
         parsed_dob = datetime.datetime.strptime(dob, '%d/%m/%Y')
         today = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
+        if parsed_dob.date() >= datetime.date.today():
+            # invalid DOB, do not add animal
+            tk.messagebox.showerror('Invalid date of birth', 'Date of birth cannot be in the future.')
+            return
 
         new_animal = animal.Animal(name, species, parsed_dob, today, cat_friendly, dog_friendly,
                                    child_friendly, False)
@@ -185,21 +190,34 @@ class MainWindow:
 
     def generate_adoption_form_clicked(self, adoption_form: adoption_form_window.AdoptionFormWindow):
         adopted_animals = adoption_form.to_adopt
+        # check if any animals selected
+        if not adopted_animals:
+            tk.messagebox.showerror('No animals selected', 'Please select at least one animal to adopt.')
+            return
         adopter_name = adoption_form.name_var.get()
         adopter_address = adoption_form.address_box.get('1.0', 'end-1c')
         filepath = adoption_form.display_path.get()
+        # create real path for saving adoption form (instead of displayed path)
+        out_dir = Path(filepath).parent
+        base_file_name = Path(filepath).stem
+        suffix = Path(filepath).suffix or '.png'
+        saved_files = []
         for a in adopted_animals:
-            generate_imgs.generate_adoption_form(filepath, a, adopter_name, adopter_address,
+            animal_file_name = f'{base_file_name}_{a.name}{suffix}'
+            generate_imgs.generate_adoption_form(str(out_dir / animal_file_name), a, adopter_name, adopter_address,
                                                  'resources/adoption_form.png')
+            saved_files.append(str(out_dir / animal_file_name))
+
         adoption_form.window.destroy()
 
         window = tk.Toplevel()
         window.wm_title('Adoption form saved')
-        confirmation_label = ttk.Label(window, text=f'Adoption form saved in {filepath}')
+        confirmation_label = ttk.Label(window, text=f'Adoption form saved in {saved_files}')
         confirmation_label.pack()
-
+        # mark as adopted and refresh the display
         for a in adopted_animals:
             self.animal_data.mark_adopted(a)
+        self.animal_data.reset_displayed_animals()
         self.refresh_animals_tree()
 
     def delete_animal_clicked(self):

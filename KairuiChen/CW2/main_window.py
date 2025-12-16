@@ -14,7 +14,7 @@ class MainWindow:
         self.root = tk.Tk()
         self.root.title('Animal Rescue')
         self.root.minsize(650, 200)
-        self.root.geometry('300x300+50+50')
+        self.root.geometry('800x450+50+50')
 
         # load animal data early because various components reference it
         self.animal_file = 'animals.csv'
@@ -166,7 +166,10 @@ class MainWindow:
         Get the animal objects that correspond to the animals selected in the animals_tree view.
         :return: References to selected animals
         """
-        selected = [self.animals_tree.focus()]
+        selected = [self.animals_tree.selection()]
+        if not selected:
+            return [] # if user hasn't selected anything, return empty list
+        
         displayed = self.animal_data.get_animals_list()
         selected_animals = []
         for s in selected:
